@@ -12,3 +12,4 @@ urlpatterns = [
     path('quizzes/<int:quiz_id>/questions/', QuestionViewset.as_view({'get': 'list', 'post': 'create'}), name='quiz-questions'),
     path('quizzes/<int:quiz_id>/questions/<int:pk>/', QuestionViewset.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='question-detail')
 ]
+
