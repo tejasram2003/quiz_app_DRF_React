@@ -1,12 +1,11 @@
-import React from 'react'
+import React from 'react';
+import { LinkContainer } from 'react-router-bootstrap';
+import { Navbar, Nav, NavDropdown, Form, FormControl, Button, Container } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../actions/UserActions';
 import { useNavigate } from 'react-router-dom';
-import { LinkContainer } from 'react-router-bootstrap';
-import { Navbar, Nav, NavDropdown, Form, FormControl, Button, Container } from 'react-bootstrap';
 
 function Header() {
-
   const userLogin = useSelector(state => state.userLogin);
 
   const { userInfo } = userLogin;
@@ -18,12 +17,30 @@ function Header() {
     navigate('/');  // Redirect to home page after logout
   }
 
-  return (
-    <div>
-      <h1>Header</h1>
+  const sellHandler = () => {
+    navigate('/create');
+  }
 
-      {userInfo ? (
+  return (
+    <Navbar bg="dark" variant="dark" expand="lg">
+      <Container fluid>
+        <LinkContainer to="/">
+          <Navbar.Brand>Quizzify</Navbar.Brand>
+        </LinkContainer>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="me-auto">
+            <LinkContainer to="/">
+              <Nav.Link>Home 
+                {/* <i className="fa-solid fa-house"></i>  home icon */}
+                </Nav.Link>
+            </LinkContainer>
+            <LinkContainer to="/cart">
+              <Nav.Link>Quizzes</Nav.Link>
+            </LinkContainer>
+            {userInfo ? (
               <NavDropdown title={userInfo.name || "User"} id="user-nav-dropdown">
+                {/* <NavDropdown.Item onClick={sellHandler}>Sell</NavDropdown.Item> */}
                 <NavDropdown.Item onClick={logoutHandler}>Logout</NavDropdown.Item>
               </NavDropdown>
             ) : (
@@ -36,8 +53,15 @@ function Header() {
                 </LinkContainer>
               </NavDropdown>
             )}
-    </div>
-  )
+          </Nav>
+          <Form className="d-flex">
+            <FormControl type="search" placeholder="Search" className="me-2" aria-label="Search" />
+            <Button variant="outline-success" type="submit">Search</Button>
+          </Form>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
+  );
 }
 
-export default Header
+export default Header;
