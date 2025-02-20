@@ -5,6 +5,8 @@ import LoginScreen from './components/screens/LoginScreen'
 import { useDispatch, useSelector } from 'react-redux'
 import { login } from './actions/UserActions'
 import SignUpScreen from './components/screens/SignUpScreen'
+import HomeScreen from './components/screens/HomeScreen'
+
 
 
 
@@ -32,7 +34,7 @@ function App() {
       <Router>
       <Header />  
         <Routes>
-          <Route path="/" element={<h1>Home</h1>} />
+          <Route path="/" element={<HomeScreen />} />
           <Route path="/login" element={<LoginScreen />} />
           <Route path="/signup" element={<SignUpScreen />} />
           <Route path="/register" element={<h1>Register</h1>} />
