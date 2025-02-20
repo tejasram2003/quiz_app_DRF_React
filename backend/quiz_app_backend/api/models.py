@@ -1,18 +1,27 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
 
 # Create your models here.
 
 
 class Account(models.Model):
+    ROLE_CHOICES = [
+        ("student", "Student"),
+        ("teacher", "Teacher"),
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="account")
-    is_teacher = models.BooleanField(default=False)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="student")
 
     def __str__(self):
-        return self.user.username
+        return f"{self.user.username} ({self.role})"
+
 
     class Meta:
         ordering = ['id']
+
+from django.core.exceptions import ValidationError
 
 class Quiz(models.Model):
     title = models.CharField(max_length=50, null=False)
@@ -24,14 +33,15 @@ class Quiz(models.Model):
 
     def __str__(self):
         return self.title
-    
-    def save(self, force_insert = ..., force_update = ..., using = ..., update_fields = ...):
 
-        if self.deadline:
-            if self.deadline < self.created_at:
-                raise ValueError("Deadline cannot be before the creation date")
-            
-        return super().save(force_insert, force_update, using, update_fields)
+    def clean(self):
+        if self.deadline and self.deadline < self.created_at:
+            raise ValidationError("Deadline cannot be before the creation date.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Validate before saving
+        super().save(*args, **kwargs)
+
     
 class Question(models.Model):
     OPTION_CHOICES = [
@@ -56,10 +66,10 @@ class Question(models.Model):
 
     
 
-class Submissions(models.Model):
+class Submission(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="submissions")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="submissions")
-    score = models.PositiveSmallIntegerField()
+    score = models.FloatField(null=True, blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -67,3 +77,16 @@ class Submissions(models.Model):
     
     class Meta:
         ordering = ['-submitted_at']
+
+
+class UserAnswer(models.Model):
+    submission = models.ForeignKey("Submission", on_delete=models.CASCADE, related_name="answers")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    selected_option = models.PositiveSmallIntegerField(null=True, blank=True)  # Stores 1, 2, 3, or 4
+    is_correct = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if self.selected_option is not None:  # If user answered
+            self.is_correct = (self.selected_option == self.question.correct_option)
+        super().save(*args, **kwargs)
+

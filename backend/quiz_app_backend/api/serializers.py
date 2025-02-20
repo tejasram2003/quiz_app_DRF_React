@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Question, Quiz
+from .models import Question, Quiz, Submission, UserAnswer
 
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -162,3 +162,41 @@ class UserListSerializer(serializers.ModelSerializer):
         # email_message.send()
 
         return user
+    
+
+
+class SubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Submission
+        fields = ['quiz', 'user', 'score', 'submitted_at']
+
+    def create(self, validated_data):
+        request = self.context['request']
+        answers = request.data.get("answers", {})  # Expecting {question_id: selected_option}
+        quiz = validated_data["quiz"]
+        user = validated_data["user"]
+
+        score = 0
+        submission = Submission.objects.create(quiz=quiz, user=user, score=0)
+
+        for question_id, selected_option in answers.items():
+            try:
+                question = Question.objects.get(id=question_id)
+
+                is_correct = (selected_option == question.correct_option)
+                if is_correct:
+                    score += 1
+
+                UserAnswer.objects.create(
+                    submission=submission,
+                    question=question,
+                    selected_option=selected_option,
+                    is_correct=is_correct
+                )
+
+            except Question.DoesNotExist:
+                continue  # Skip invalid question IDs
+
+        submission.score = score
+        submission.save()
+        return submission
